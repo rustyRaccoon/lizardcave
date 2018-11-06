@@ -38,6 +38,10 @@ welcomeMessageList = ["How's your day going?",
                       "Don't have any friends either, hm?",
                       "Nice to see you're doing well!",
                       "Not bored of my tool yet, eh?"]
+regionList = ["woods",
+              "desert",
+              "castle",
+              "the moon!"]
 
 # Welcome code
 def main():
@@ -105,18 +109,21 @@ def createTable(conn, SQLstring):
     except Error as e:
         print("Oh man, another error? Jeez, wtf are you even doing?\n" + e)
 
-def fetchFromDB(conn, tableToFetch):
+def fetchFromDB(conn, tableToFetch, where = None):
     cur = conn.cursor()
-    cur.execute("SELECT * FROM " + tableToFetch)
+    if where == None:
+        cur.execute("SELECT * FROM " + tableToFetch)
+    else:
+        cur.execute("SELECT * FROM " + tableToFetch + " WHERE" + where)
     
     fetchedData = []
-    tempList = []
-    fetchedData[0] = [tuple[0] for tuple in cur.description]
+    fetchedData.append([tuple[0] for tuple in cur.description])
     rows = cur.fetchall()
        
-    for tuple in rows:
-        for item in tuple:
-            tempList.append(item)
+    for spellData in rows:
+        tempList = []
+        for singleItem in spellData:
+            tempList.append(singleItem)
         fetchedData.append(tempList)
     return fetchedData
 
@@ -132,13 +139,24 @@ def generateEnemies():
     # Ask for user input to base the generation on
     print("Number of players: ",end="")
     numPlayers = input()
-    print("Average player level: ",end="")
+    print("Player level (separated by commas): ",end="")
     playerLevel = input()
-    print("Region to generate for: ",end="")
+    print("Region to generate for (for a list enter 'list'): ",end="")
     targetRegion = input()
     
     # Process input
-    
+    if targetRegion == 'list':
+        for region in regionList:
+            print("+ " + region)
+        print("Region to generate for: ",end="")
+        targetRegion = input()
+    else:
+        if playerLevel.find(",") != -1:
+            levelList = playerLevel.split(",")
+            playerLevel = sum(levelList)/numPlayers #don't use average!! find better algorithm!!
+        
+        fetchFromDB(createConnection(targetFile), "enemies", "region = '" + targetRegion + "'")
+
 def checkSpells():
     clear()
     print('Welcome to the spell organizer subroutine. It will help you and',
