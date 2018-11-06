@@ -109,9 +109,16 @@ def fetchFromDB(conn, tableToFetch):
     cur = conn.cursor()
     cur.execute("SELECT * FROM " + tableToFetch)
     
+    fetchedData = []
+    tempList = []
+    fetchedData[0] = [tuple[0] for tuple in cur.description]
     rows = cur.fetchall()
-    
-    return rows
+       
+    for tuple in rows:
+        for item in tuple:
+            tempList.append(item)
+        fetchedData.append(tempList)
+    return fetchedData
 
 def clear():
     os.system('cls')
