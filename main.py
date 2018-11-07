@@ -2,18 +2,21 @@
 """
 Created on Tue Oct 30 08:00:19 2018
 
-@author: APO
+@author: TopBadger
 Supposed to be a supporting application for playing Dungeons&Dragons, or as I
 call it Caves&Lizards. There are databases of enemies and spells in the
-background.
+background that should be supplied with this source code. If they're not you're
+basically fucked. I mean you can create a DB of your own but you would either
+need to reproduce my formatting exactly or alter the code to fit your DB.
 
-Functionalities should be in separate tabs.
+For now this is a console application. At a later point in time I would like
+to make a nice GUI with buttons and fields and shit.
 
 Functionalities:
     - Random enemy group generator based on:
         . Number of players
         . Player level
-        . Current region the party is in
+        . Output in a text file would be nice
     - Import tool to feed new data into the database
     - Spell allocation tool that suggests spells based on:
         . Player character level
@@ -23,12 +26,21 @@ Functionalities:
         . Number of players
         . Player level
         . Current region the party is in
+    - Battlefield generator
+        . Sets the mood for a battle
+        . Gives environment to use (both for party and for enemies)
+        . Based on the region the party is in
 """
-
-import sqlite3, os, pandas as pd
+#-----------------------------------------------------------------------------
+# Import stuff
+#-----------------------------------------------------------------------------
+import sqlite3, os, tempfile, time, pandas as pd
 from sqlite3 import Error
 from random import randint
 
+#-----------------------------------------------------------------------------
+# Global vars
+#-----------------------------------------------------------------------------
 workingFolder = 'C:\\Users\\apo\_LOCAL\Caves&Lizards'                           # Global variables
 targetFile = os.path.join(workingFolder,"dataStorage.db")
 dataSource = os.path.join(workingFolder,"dataInput.xlsm")
@@ -42,6 +54,15 @@ regionList = ["woods",
               "castle",
               "the moon!"]
 
+#-----------------------------------------------------------------------------
+# Vars to tweak shit
+#-----------------------------------------------------------------------------
+damageMultiplier = 1.2
+damageModifier = 0.8
+
+#-----------------------------------------------------------------------------
+# Start of actual code
+#-----------------------------------------------------------------------------
 def main():                                                                     
     print("--# Caves & Lizards toolkit #--\n")                                  # Welcome code
     
@@ -131,14 +152,14 @@ def generateEnemies(): # Generates a random enemy group based on user input
     print("Player level (10 max; separated by commas): ",end="")                        
     userInput = input()                                                         # Ask for user input to base the generation on
     levelList = userInput.split(",")                                            # Split answer to get a List for easier handling
-    levelList = list(map(int,levelList))                                        # Change type to int
+    levelList = list(map(int,levelList))                                        # Change type to ints
     numPlayers = len(levelList)                                                 # Get number of items in list    
-    if numPlayers < 4:
-        playerLevel = round(sum(levelList)/numPlayers * 1.2)                    # Calculate average player level (does not account for parties greater 10 people)
+    if numPlayers <= 4:
+        playerLevel = round(sum(levelList)/numPlayers * damageMultiplier)       # Calculate average player level (does not account for parties greater 10 people)
     else:
-        playerLevel = round(sum(levelList)/numPlayers * 1.2 * (numPlayers%4*0.8)) # Calculate average player level (does not account for parties greater 10 people)
+        playerLevel = round(sum(levelList)/numPlayers * damageMultiplier * (numPlayers%4*damageModifier)) # Calculate average player level (does not account for parties greater 10 people)
         
-    fetchedEnemyList = fetchFromDB(createConnection(targetFile), "enemyName, enemyChallenge FROM enemies WHERE enemyChallenge <= '" + str(playerLevel) + "'") # Query all enemies from the database that fit the criteria (correct region and challenge level below players)
+    fetchedEnemyList = fetchFromDB(createConnection(targetFile), "enemyName, enemyChallenge FROM enemies WHERE enemyChallenge BETWEEN '" + str(playerLevel/2) + "' AND '" + str(playerLevel) + "'") # Query all enemies from the database that fit the criteria (correct region and challenge level below players)
     chosenEnemyList = []                                                        # Create empty list
     
     while sum(row[1] for row in chosenEnemyList) < playerLevel:                 # While the challenge level of the enemy group is below the average player level, keep looping
@@ -150,8 +171,12 @@ def generateEnemies(): # Generates a random enemy group based on user input
         detailList.append(enemyDetails[1])
     detailList.insert(0,enemyDetails[0])
     
-    # Write the outcome to the console or whatever. Maybe better to open a textfile and dump that shit there
+    f = open(tempfile.gettempdir() + "randEnemy_" + str(round(time.time())),"a")     # Write the outcome to the console or whatever. Maybe better to open a textfile and dump that shit there
     
+    for enemy in detailList:
+        for item in detailList:
+            f.write(item)
+        f.write("\n")
     
 def checkSpells(): # Check what spells can be used by the player based on user input
     clear()                                                                     # Clear console
