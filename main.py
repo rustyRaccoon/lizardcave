@@ -34,14 +34,14 @@ Functionalities:
 #-----------------------------------------------------------------------------
 # Import stuff
 #-----------------------------------------------------------------------------
-import sqlite3, os, tempfile, time, pandas as pd
+import sqlite3, os, tempfile, time, webbrowser, pandas as pd
 from sqlite3 import Error
 from random import randint
 
 #-----------------------------------------------------------------------------
 # Global vars
 #-----------------------------------------------------------------------------
-workingFolder = 'C:\\Users\\apo\_LOCAL\Caves&Lizards'                           # Global variables
+workingFolder = 'C:\\Users\\apo\_LOCAL\Caves&Lizards'
 targetFile = os.path.join(workingFolder,"dataStorage.db")
 dataSource = os.path.join(workingFolder,"dataInput.xlsm")
 welcomeMessageList = ["How's your day going?",
@@ -52,6 +52,9 @@ welcomeMessageList = ["How's your day going?",
 regionList = ["woods",
               "desert",
               "castle",
+              "Soviet Russia",
+              "Syria",
+              "cave",
               "the moon!"]
 
 #-----------------------------------------------------------------------------
@@ -64,11 +67,12 @@ damageModifier = 0.8
 # Start of actual code
 #-----------------------------------------------------------------------------
 def main():                                                                     
-    print("--# Caves & Lizards toolkit #--\n")                                  # Welcome code
+    print("--# Caves & Lizards toolkit #--\n")
     
     welcomeMessage = welcomeMessageList[randint(0,len(welcomeMessageList)-1)]
     print("Welcome, dear user! " + welcomeMessage)
-                                                                                # Main loop
+    
+    # Main loop
     while 1:                                                                    # Ask user what he wants to do
         print('\nWhat would you like to do next?')
         print('[1] Generate new enemy group')
@@ -164,19 +168,51 @@ def generateEnemies(): # Generates a random enemy group based on user input
     
     while sum(row[1] for row in chosenEnemyList) < playerLevel:                 # While the challenge level of the enemy group is below the average player level, keep looping
         chosenEnemyList.append(fetchedEnemyList[randint(1,len(fetchedEnemyList))-1]) # Get a new random enemy from the List and add him to the chosenList
-    
+        
     detailList = []
     for enemy in chosenEnemyList:
-        enemyDetails = fetchFromDB(createConnection(targetFile), "* FROM enemies WHERE enemyName = '" + enemy[0] + "'")
+        try:
+            enemyDetails = fetchFromDB(createConnection(targetFile), "* FROM enemies WHERE enemyName = '" + enemy[0] + "'")
+        except Error as e:
+            print("Error at: " + enemy[0])
         detailList.append(enemyDetails[1])
     detailList.insert(0,enemyDetails[0])
     
-    f = open(tempfile.gettempdir() + "randEnemy_" + str(round(time.time())),"a")     # Write the outcome to the console or whatever. Maybe better to open a textfile and dump that shit there
+    for subList in detailList:
+        del subList[0]
     
-    for enemy in detailList:
-        for item in detailList:
-            f.write(item)
+    filename = tempfile.gettempdir() + "randEnemy_" + str(round(time.time()))   # Create temporary file name with timestamp
+    f = open(filename,"a")                                                      # Write the outcome to the console or whatever. Maybe better to open a textfile and dump that shit there
+    
+    # Add information about party to file (beginning)
+    
+    titleList = detailList[0]
+    
+    for subList in detailList[1:]:
+        counter = 0
+        
+        for item in subList:
+            if len(titleList[counter]) > 14:
+                f.write(titleList[counter] + " \t")
+            else:
+                f.write(titleList[counter] + " \t\t")
+            
+            if str(item).find("\n") == -1:
+                f.write(str(item))
+            else:
+                tempList = str(item).split("\n")
+                f.write(tempList[0])
+                for tempItem in tempList[1:]:
+                    f.write("\n")
+                    f.write("\t\t\t")
+                    f.write(tempItem)
+            f.write("\n")
+            counter+=1
+            
         f.write("\n")
+        f.write("\n")
+    
+    webbrowser.open(filename)
     
 def checkSpells(): # Check what spells can be used by the player based on user input
     clear()                                                                     # Clear console
