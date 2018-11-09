@@ -34,7 +34,7 @@ Functionalities:
 #-----------------------------------------------------------------------------
 # Import stuff
 #-----------------------------------------------------------------------------
-import sqlite3, os, tempfile, time, webbrowser, pandas as pd
+import sqlite3, os, tempfile, time, webbrowser, math, pandas as pd
 from sqlite3 import Error
 from random import randint
 
@@ -60,8 +60,7 @@ regionList = ["woods",
 #-----------------------------------------------------------------------------
 # Vars to tweak shit
 #-----------------------------------------------------------------------------
-damageMultiplier = 1.2
-damageModifier = 0.8
+expFactor = -0.05
 
 #-----------------------------------------------------------------------------
 # Start of actual code
@@ -153,21 +152,62 @@ def generateEnemies(): # Generates a random enemy group based on user input
            'generate a new group of enemies suitable for your party and', 
            'current area. Please provide some data first.\n')
     
+    print("From 1-5 hard should the challenge be? [1 = Easy, 4 = Deadly]: ",end="")                        
+    userInput = input()                                                         # Ask for user input to base the generation on
+    if int(userInput) == 1:
+        difficulty = "Easy"
+        mobLevelDivider = 0.5
+        difficultyMultiplier = 1
+        difficultyScaler = 0.1
+    elif int(userInput) == 2:
+        difficulty = "Medium"
+        mobLevelDivider = 0.6
+        difficultyMultiplier = 1.05
+        difficultyScaler = 0.15
+    elif int(userInput) == 3:
+        difficulty = "Hard"
+        mobLevelDivider = 0.7
+        difficultyMultiplier = 1.1
+        difficultyScaler = 0.2
+    elif int(userInput) == 4:
+        difficulty = "Deadly"
+        mobLevelDivider = 0.8
+        difficultyMultiplier = 1.15
+        difficultyScaler = 0.6
+    else:
+        print("You fucked up. Difficulty set to default values.")
+        difficulty = "Medium"
+        mobLevelDivider = 0.6
+        difficultyMultiplier = 1.05
+        difficultyScaler = 0.15
+        
     print("Player level (10 max; separated by commas): ",end="")                        
     userInput = input()                                                         # Ask for user input to base the generation on
     levelList = userInput.split(",")                                            # Split answer to get a List for easier handling
     levelList = list(map(int,levelList))                                        # Change type to ints
-    numPlayers = len(levelList)                                                 # Get number of items in list    
-    if numPlayers <= 4:
-        playerLevel = round(sum(levelList)/numPlayers * damageMultiplier)       # Calculate average player level (does not account for parties greater 10 people)
-    else:
-        playerLevel = round(sum(levelList)/numPlayers * damageMultiplier * (numPlayers%4*damageModifier)) # Calculate average player level (does not account for parties greater 10 people)
+    numPlayers = len(levelList)                                                 # Get number of items in list
+    playerLevel = round(sum(levelList)/numPlayers * difficultyMultiplier)       # Calculate average player level (does not account for parties greater 10 people)
+    if numPlayers >= 4:
+        playerLevel += playerLevel * (numPlayers%4*difficultyScaler*math.exp(round(sum(levelList)/numPlayers)*expFactor)) # Calculate average player level (does not account for parties greater 10 people)
         
-    fetchedEnemyList = fetchFromDB(createConnection(targetFile), "enemyName, enemyChallenge FROM enemies WHERE enemyChallenge BETWEEN '" + str(playerLevel/2) + "' AND '" + str(playerLevel) + "'") # Query all enemies from the database that fit the criteria (correct region and challenge level below players)
     chosenEnemyList = []                                                        # Create empty list
+    topCap = playerLevel
+    lowCap = playerLevel*mobLevelDivider
+    tries = 0
     
     while sum(row[1] for row in chosenEnemyList) < playerLevel:                 # While the challenge level of the enemy group is below the average player level, keep looping
-        chosenEnemyList.append(fetchedEnemyList[randint(1,len(fetchedEnemyList))-1]) # Get a new random enemy from the List and add him to the chosenList
+        fetchedEnemyList = fetchFromDB(createConnection(targetFile), "enemyName, enemyChallenge FROM enemies WHERE enemyChallenge BETWEEN '" + str(lowCap) + "' AND '" + str(topCap) + "'") # Query all enemies from the database that fit the criteria (correct region and challenge level below players)
+        fetchedEnemyList = fetchedEnemyList[1:]
+        randEnemy = fetchedEnemyList[randint(1,len(fetchedEnemyList))-1]        # Get a new random enemy from the List
+        print("RandEnemy: " + str(randEnemy[1]) + " " + str(type(randEnemy[1])))
+        if (sum(row[1] for row in chosenEnemyList) + randEnemy[1]) <= playerLevel: # Check if new enemy would go over boundaries 
+            chosenEnemyList.append(randEnemy)                                   # Add random enemy to the chosenList
+        if tries > 3:
+            tries = 0
+            topCap = playerLevel - sum(row[1] for row in chosenEnemyList)
+            lowCap = topCap * mobLevelDivider
+        else:
+            tries += 1
         
     detailList = []
     for enemy in chosenEnemyList:
@@ -185,6 +225,12 @@ def generateEnemies(): # Generates a random enemy group based on user input
     f = open(filename,"a")                                                      # Write the outcome to the console or whatever. Maybe better to open a textfile and dump that shit there
     
     # Add information about party to file (beginning)
+    tempString = "Player levels: "
+    for player in levelList:
+        tempString += (str(player) + ", ")
+    
+    tempString += ("\nAverage level for calculation: " + str(playerLevel) + "\nChosen difficulty: "+ difficulty + "\n\n---------------------------------------------------------------------------\n")
+    f.write(tempString)
     
     titleList = detailList[0]
     
