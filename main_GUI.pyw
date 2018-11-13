@@ -43,9 +43,9 @@ import time
 import webbrowser
 import math
 import pandas as pd
+import tkinter as tk
 from sqlite3 import Error
 from random import randint
-from tkinter import *
 from tkinter import ttk
 
 #-----------------------------------------------------------------------------
@@ -400,30 +400,49 @@ class spell:
         self.description = description
         self.higherLevels = higherLevels
 
-# GUI setup
-root = Tk()
+#-----------------------------------------------------------------------------
+# GUI stuff
+#-----------------------------------------------------------------------------
+
+# Create root woop woop
+root = tk.Tk()
 root.title("Caves & Lizards toolkit")
 
-mainframe = ttk.Frame(root, padding="3 3 12 12")
-mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+# Create main frame that houses everything else
+mainframe = ttk.Frame(root, padding="5")
+mainframe.grid(column=0, row=0, sticky='nwes')
+# If main window is resized, expand frame to take up the extra space
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
 
-feet = StringVar()
-meters = StringVar()
+# Create for later (supports auto-update)
+playerLevels = tk.StringVar()
 
-feet_entry = ttk.Entry(mainframe, width=7, textvariable=feet)
-feet_entry.grid(column=2, row=1, sticky=(W, E))
+# Create entry boxes
+playerLevels = ttk.Entry(mainframe, width=7, textvariable=playerLevels)
+playerLevels.grid(column=2, row=1, sticky='we')
 
-ttk.Label(mainframe, textvariable=meters).grid(column=2, row=2, sticky=(W, E))
-ttk.Button(mainframe, text="Calculate", command=generateEnemies).grid(column=3, row=3, sticky=W)
-ttk.Label(mainframe, text="feet").grid(column=3, row=1, sticky=W)
-ttk.Label(mainframe, text="is equivalent to").grid(column=1, row=2, sticky=E)
-ttk.Label(mainframe, text="meters").grid(column=3, row=2, sticky=W)
+# Create labels
+ttk.Label(mainframe, text="Player levels:").grid(column=1, row=1, sticky='e')
+ttk.Label(mainframe, text="is equivalent to").grid(column=1, row=2, sticky='e')
+ttk.Label(mainframe, text="meters").grid(column=2, row=2, sticky='w')
 
-for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
+# Create buttons
+ttk.Button(mainframe, text="Generate", command=generateEnemies).grid(column=2, row=3, sticky='w')
 
-feet_entry.focus()
-#root.bind('<Return>', someAction) #bind something to Enter key
+# Create slider
+difficultySlider = ttk.Scale(mainframe, from_=1, to=5, orient = 'horizontal', value = 2)
+difficultySlider.grid(column = 1, row = 3, sticky='we')
+#difficultySlider.set(2)
 
+# Add nice padding to everything
+for child in mainframe.winfo_children():
+    child.grid_configure(padx=5, pady=5)
+
+# Set focus to first entry field
+playerLevels.focus()
+# Bind enemy generating function to Enter key
+root.bind('<Return>', generateEnemies)
+    
+# Start event loop
 root.mainloop()
