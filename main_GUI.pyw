@@ -310,7 +310,7 @@ def checkSpells():
     # magicLevel
 
     # Process input
-
+    print("Nothing")
 # Generate a random adventure based on user input
 def generateAdventure():
     # Experimental state warning
@@ -318,7 +318,7 @@ def generateAdventure():
     # Player levels
 
     # Process input
-
+    print("Nothing")
 #-----------------------------------------------------------------------------
 # Class definitions (classes not used in this version, kept it for later versions)
 #-----------------------------------------------------------------------------
