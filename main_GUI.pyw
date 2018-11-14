@@ -366,34 +366,53 @@ class spell:
 # GUI stuff
 #-----------------------------------------------------------------------------
 
-def doScaleStuff(*args):
-    value = diffScale.get()
+def getpage(self, pageClass):
+    return self.framges[pageClass]
+    
+def doScaleStuff(self, *args):
+    page = self.controller.getPage(enemyPage)
+    value = page.diffScale.get()
     if int(value) != value:
-        diffScale.set(round(value,0))
-        
+        page.diffScale.set(round(value,0))
     if value == 1:
-        curDiffStr.set("Easy")
+        page.curDiffStr.set("Easy")
     elif value == 2:
-        curDiffStr.set("Medium")
+        page.curDiffStr.set("Medium")
     elif value == 3:
-        curDiffStr.set("Hard")
+        page.curDiffStr.set("Hard")
     elif value == 4:
-        curDiffStr.set("Deadly")
+        page.curDiffStr.set("Deadly")
     else:
-        curDiffStr.set("Medium")
+        page.curDiffStr.set("Medium")
 
-# Look into grid_remove
-# Create root woop woop
+def raiseFrame(frame):
+    frame.tkraise()
+
+# Create root object and name it
 root = tk.Tk()
 root.title("Caves & Lizards toolkit")
 
-# Create main frame that houses everything else
-mainframe = ttk.Frame(root, padding="5")
-mainframe.grid(column=0, row=0, sticky='nwes')
 # If main window is resized, expand frame to take up the extra space
 root.columnconfigure(0, weight=1)
 root.rowconfigure(0, weight=1)
 
+startPage = ttk.Frame(root)
+enemyPage_in = ttk.Frame(root)
+enemyPage_out = ttk.Frame(root)
+spellPage_in = ttk.Frame(root)
+spellPage_out = ttk.Frame(root)
+adventurePage_in = ttk.Frame(root)
+adventurePage_out = ttk.Frame(root)
+
+for frame in (startPage, enemyPage_in, enemyPage_out, spellPage_in, spellPage_out, adventurePage_in, adventurePage_out):
+    frame.grid(row = 0, column = 0, sticky = 'news')
+
+#-----------------------------------------------------------------------------
+# Create start frame
+
+
+#-----------------------------------------------------------------------------
+# Create enemy input frame
 # Create for later (supports auto-update)
 playerLevels = tk.StringVar()
 curDiffInt = tk.IntVar()
@@ -401,33 +420,47 @@ curDiffStr = tk.StringVar()
 returnFile = tk.IntVar()
 
 # Create entry boxes
-playerLevels = ttk.Entry(mainframe, width=7, textvariable=playerLevels)
+playerLevels = ttk.Entry(enemyPage_in, width=7, textvariable=playerLevels)
 playerLevels.grid(column=2, row=1, sticky='we')
-
+        
 # Create labels
-ttk.Label(mainframe, text="Player levels:").grid(column=1, row=1, sticky='e')
-ttk.Label(mainframe, text="Difficulty:").grid(column=1, row=2, sticky='e')
-ttk.Label(mainframe, textvariable=curDiffStr).grid(column=2, row=3, sticky='we')
-
+ttk.Label(enemyPage_in, text="Player levels:").grid(column=1, row=1, sticky='e')
+ttk.Label(enemyPage_in, text="Difficulty:").grid(column=1, row=2, sticky='e')
+ttk.Label(enemyPage_in, textvariable=curDiffStr).grid(column=2, row=3, sticky='we')
+        
 # Create buttons
-ttk.Button(mainframe, text="Generate", command=generateEnemies).grid(column=2, row=4, sticky='w')
+ttk.Button(enemyPage_in, text="Generate", command=generateEnemies).grid(column=2, row=4, sticky='w')
 
 # Create slider
-diffScale = ttk.Scale(mainframe, from_=1, to=4, orient = 'horizontal', variable = curDiffInt, command = doScaleStuff)
+diffScale = ttk.Scale(enemyPage_in, from_=1, to=4, orient = 'horizontal', variable = curDiffInt, command = doScaleStuff)
 diffScale.grid(column = 2, row = 2, sticky='we')
 diffScale.set(2)
 
 # Create checkboxes
-ttk.Checkbutton(mainframe, text = "Return file", variable = returnFile).grid(column = 1, row = 4, sticky = 'w')
+ttk.Checkbutton(enemyPage_in, text = "Return file", variable = returnFile).grid(column = 1, row = 4, sticky = 'w')
 
 # Add nice padding to everything
-for child in mainframe.winfo_children():
+for child in enemyPage_in.winfo_children():
     child.grid_configure(padx=5, pady=5)
-
-# Set focus to first entry field
-playerLevels.focus()
-# Bind enemy generating function to Enter key
-root.bind('<Return>', generateEnemies)
     
-# Start event loop
+    # Set focus to first entry field
+    playerLevels.focus()
+
+#-----------------------------------------------------------------------------
+# Create enemy output frame
+
+#-----------------------------------------------------------------------------
+# Create spell input frame
+
+#-----------------------------------------------------------------------------
+# Create spell output frame
+
+#-----------------------------------------------------------------------------
+# Create adventure input frame
+
+#-----------------------------------------------------------------------------
+# Create adventure output frame
+
+#Start main loop
+raiseFrame(startPage)
 root.mainloop()
