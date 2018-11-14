@@ -156,10 +156,6 @@ def fetchFromDB(conn, SQLquery):
         fetchedData.append(tempList)
     return fetchedData
 
-#Clear the console
-def clear():
-    os.system('cls')
-
 # Check if a given List contains an item in a given Column
 def listContains(listToSearch,listLevel,itemToSearch):
     # loop through all items in the List
@@ -171,48 +167,36 @@ def listContains(listToSearch,listLevel,itemToSearch):
             return False
 
 # Generates a random enemy group based on user input
-def generateEnemies():
-    clear()
-    print('Welcome to the enemy generator subroutine. It will help you to',
-           'generate a new group of enemies suitable for your party and',
-           'current area. Please provide some data first.\n')
-
-    # Ask user how hard the challenge should be
-    print("From 1-5 hard should the challenge be? [1 = Easy, 4 = Deadly]: ",end="")
-    userInput = input()
-
+def generateEnemies(diffInput, levelInput):
     #Process user input
-    if int(userInput) == 1:
+    if int(diffInput) == 1:
         difficulty = "Easy"
         mobLevelDivider = 0.5
         difficultyMultiplier = 1
         difficultyScaler = 0.1
-    elif int(userInput) == 2:
+    elif int(diffInput) == 2:
         difficulty = "Medium"
         mobLevelDivider = 0.6
         difficultyMultiplier = 1.05
         difficultyScaler = 0.15
-    elif int(userInput) == 3:
+    elif int(diffInput) == 3:
         difficulty = "Hard"
         mobLevelDivider = 0.7
         difficultyMultiplier = 1.1
         difficultyScaler = 0.2
-    elif int(userInput) == 4:
+    elif int(diffInput) == 4:
         difficulty = "Deadly"
         mobLevelDivider = 0.8
         difficultyMultiplier = 1.15
         difficultyScaler = 0.6
     else:
-        print("You fucked up. Difficulty set to default values.")
         difficulty = "Medium"
         mobLevelDivider = 0.6
         difficultyMultiplier = 1.05
         difficultyScaler = 0.15
 
-    # Ask for user for player levels
-    print("Player level (10 max; separated by commas): ",end="")
-    # Split answer to get a List for easier handling and map to int
-    levelList = list(map(int,input().split(",")))
+    # Split level input to get a List for easier handling and map to int
+    levelList = list(map(int,levelInput.split(",")))
     # Get number of items in list
     numPlayers = len(levelList)
     # Calculate average player level base value
@@ -285,75 +269,53 @@ def generateEnemies():
     # Add a visible divider
     tempString += "\n---------------------------------------------------------------------------\n"
     f.write(tempString)
-
-
-    # Write all the info about an enemy to the file (1 line per parameter)
-    for subList in enemyList[1:]:
-        counter = 0
-
-        # Formatting if this spans multiline
-        for item in subList:
-            if len(enemyList[0][counter]) > 14:
-                f.write(enemyList[0][counter] + " \t")
-            else:
-                f.write(enemyList[0][counter] + " \t\t")
-
-            if str(item).find("\n") == -1:
-                f.write(str(item))
-            else:
-                tempList = str(item).split("\n")
-                f.write(tempList[0])
-                for tempItem in tempList[1:]:
-                    f.write("\n")
-                    f.write("\t\t\t")
-                    f.write(tempItem)
+    
+    # If user does not want to return a file
+    if returnFile == 0:
+        return enemyList
+    else:
+        # Write all the info about an enemy to the file (1 line per parameter)
+        for subList in enemyList[1:]:
+            counter = 0
+    
+            # Formatting if this spans multiline
+            for item in subList:
+                if len(enemyList[0][counter]) > 14:
+                    f.write(enemyList[0][counter] + " \t")
+                else:
+                    f.write(enemyList[0][counter] + " \t\t")
+    
+                if str(item).find("\n") == -1:
+                    f.write(str(item))
+                else:
+                    tempList = str(item).split("\n")
+                    f.write(tempList[0])
+                    for tempItem in tempList[1:]:
+                        f.write("\n")
+                        f.write("\t\t\t")
+                        f.write(tempItem)
+                f.write("\n")
+                counter+=1
+    
             f.write("\n")
-            counter+=1
-
-        f.write("\n")
-        f.write("\n")
-
-    # Open the file in an editor
-    webbrowser.open(filename)
+            f.write("\n")
+    
+        # Open the file in an editor
+        webbrowser.open(filename)
 
 # Check what spells can be used by the player based on user input
 def checkSpells():
-    clear()
-    print('Welcome to the spell organizer subroutine. It will help you and',
-          'your party to find suitable spells for their level, class and',
-          'knowledge. Please provide some data to get started.\n')
-
-# Ask for user input and assign it to variables
-    print("Character class: ",end="")
-    charClass = input()
-    print("Character level: ",end="")
-    charLevel = input()
-    print("Magic level: ",end="")
-    magicLevel = input()
+    # Character class
+    # Character level
+    # magicLevel
 
     # Process input
 
 # Generate a random adventure based on user input
 def generateAdventure():
-    clear()
-    print('WARNING! THIS FEATURE IS HIGHLY EXPERIMENTAL!\n\n')
-    print('Welcome to the super tight adventure generator (S.T.A.G.) which',
-          'will help you to make a really nice adventure for your party.',
-          'Damn straight, brosef, this will knock your socks off.')
-
-    # Ask user for region to generate for
-    print("Region to generate in (for a list enter 'list'):",end="")
-    targetRegion = input()
-    # If user wants to see the list of regions, show him and keep asking until he provides viable input
-    while targetRegion == 'list':
-        for region in regionList:
-            print("+ " + region)
-        print("Region to generate for: ",end="")
-        targetRegion = input()
-    print("Number of players: ",end="")
-    numPlayers = input()
-    print("Average player level: ",end="")
-    playerLevel = input()
+    # Experimental state warning
+    # Region to generate for
+    # Player levels
 
     # Process input
 
@@ -404,6 +366,23 @@ class spell:
 # GUI stuff
 #-----------------------------------------------------------------------------
 
+def doScaleStuff(*args):
+    value = diffScale.get()
+    if int(value) != value:
+        diffScale.set(round(value,0))
+        
+    if value == 1:
+        curDiffStr.set("Easy")
+    elif value == 2:
+        curDiffStr.set("Medium")
+    elif value == 3:
+        curDiffStr.set("Hard")
+    elif value == 4:
+        curDiffStr.set("Deadly")
+    else:
+        curDiffStr.set("Medium")
+
+# Look into grid_remove
 # Create root woop woop
 root = tk.Tk()
 root.title("Caves & Lizards toolkit")
@@ -417,6 +396,9 @@ root.rowconfigure(0, weight=1)
 
 # Create for later (supports auto-update)
 playerLevels = tk.StringVar()
+curDiffInt = tk.IntVar()
+curDiffStr = tk.StringVar()
+returnFile = tk.IntVar()
 
 # Create entry boxes
 playerLevels = ttk.Entry(mainframe, width=7, textvariable=playerLevels)
@@ -424,16 +406,19 @@ playerLevels.grid(column=2, row=1, sticky='we')
 
 # Create labels
 ttk.Label(mainframe, text="Player levels:").grid(column=1, row=1, sticky='e')
-ttk.Label(mainframe, text="is equivalent to").grid(column=1, row=2, sticky='e')
-ttk.Label(mainframe, text="meters").grid(column=2, row=2, sticky='w')
+ttk.Label(mainframe, text="Difficulty:").grid(column=1, row=2, sticky='e')
+ttk.Label(mainframe, textvariable=curDiffStr).grid(column=2, row=3, sticky='we')
 
 # Create buttons
-ttk.Button(mainframe, text="Generate", command=generateEnemies).grid(column=2, row=3, sticky='w')
+ttk.Button(mainframe, text="Generate", command=generateEnemies).grid(column=2, row=4, sticky='w')
 
 # Create slider
-difficultySlider = ttk.Scale(mainframe, from_=1, to=5, orient = 'horizontal', value = 2)
-difficultySlider.grid(column = 1, row = 3, sticky='we')
-#difficultySlider.set(2)
+diffScale = ttk.Scale(mainframe, from_=1, to=4, orient = 'horizontal', variable = curDiffInt, command = doScaleStuff)
+diffScale.grid(column = 2, row = 2, sticky='we')
+diffScale.set(2)
+
+# Create checkboxes
+ttk.Checkbutton(mainframe, text = "Return file", variable = returnFile).grid(column = 1, row = 4, sticky = 'w')
 
 # Add nice padding to everything
 for child in mainframe.winfo_children():
