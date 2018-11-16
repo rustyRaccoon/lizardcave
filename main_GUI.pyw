@@ -44,6 +44,7 @@ import webbrowser
 import math
 import pandas as pd
 import tkinter as tk
+from tkinter import font as tkfont
 from sqlite3 import Error
 from random import randint
 from tkinter import ttk
@@ -365,25 +366,21 @@ class spell:
 #-----------------------------------------------------------------------------
 # GUI stuff
 #-----------------------------------------------------------------------------
-
-def getpage(self, pageClass):
-    return self.framges[pageClass]
-    
-def doScaleStuff(self, *args):
-    page = self.controller.getPage(enemyPage)
-    value = page.diffScale.get()
+   
+def doScaleStuff():
+    value = diffScale.get()
     if int(value) != value:
-        page.diffScale.set(round(value,0))
+        diffScale.set(round(value,0))
     if value == 1:
-        page.curDiffStr.set("Easy")
+        curDiffStr.set("Easy")
     elif value == 2:
-        page.curDiffStr.set("Medium")
+        curDiffStr.set("Medium")
     elif value == 3:
-        page.curDiffStr.set("Hard")
+        curDiffStr.set("Hard")
     elif value == 4:
-        page.curDiffStr.set("Deadly")
+        curDiffStr.set("Deadly")
     else:
-        page.curDiffStr.set("Medium")
+        curDiffStr.set("Medium")
 
 def raiseFrame(frame):
     frame.tkraise()
@@ -391,6 +388,7 @@ def raiseFrame(frame):
 # Create root object and name it
 root = tk.Tk()
 root.title("Caves & Lizards toolkit")
+titleFont = tkfont.Font(family='Helvetica', size=14, weight="bold", slant="italic")
 
 # If main window is resized, expand frame to take up the extra space
 root.columnconfigure(0, weight=1)
@@ -407,9 +405,15 @@ adventurePage_out = ttk.Frame(root)
 for frame in (startPage, enemyPage_in, enemyPage_out, spellPage_in, spellPage_out, adventurePage_in, adventurePage_out):
     frame.grid(row = 0, column = 0, sticky = 'news')
 
+def showEnemies():
+    enemyPage_in.tkraise()
 #-----------------------------------------------------------------------------
 # Create start frame
-
+# Create buttons
+ttk.Label(startPage, text="Welcome to the noice Caves & Lizards tool", font=titleFont).grid(column=1, row=1, columnspan=3, sticky='n', ipady=10)
+ttk.Button(startPage, text="Generate enemies",command=showEnemies).grid(column=2, row=2, sticky='we')
+ttk.Button(startPage, text="Check spells",command=raiseFrame(spellPage_in)).grid(column=2, row=3, sticky='we')
+ttk.Button(startPage, text="Generate adventure",command=raiseFrame(adventurePage_in)).grid(column=2, row=4, sticky='we')
 
 #-----------------------------------------------------------------------------
 # Create enemy input frame
@@ -449,6 +453,7 @@ for child in enemyPage_in.winfo_children():
 #-----------------------------------------------------------------------------
 # Create enemy output frame
 
+
 #-----------------------------------------------------------------------------
 # Create spell input frame
 
@@ -462,5 +467,6 @@ for child in enemyPage_in.winfo_children():
 # Create adventure output frame
 
 #Start main loop
+for child in root.winfo_children(): child.grid_configure(padx=10, pady=10)
 raiseFrame(startPage)
 root.mainloop()
