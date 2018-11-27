@@ -80,51 +80,6 @@ expFactor = -0.05  # Factor for exponential function decay
 # -----------------------------------------------------------------------------
 
 
-# Main function
-def main():
-    # Welcome the user
-    welcomeMessage = welcomeMessageList[randint(0, len(welcomeMessageList)-1)]
-    print("Welcome, dear user! " + welcomeMessage)
-
-    # Main loop
-    # Ask user what he wants to do
-    while 1:
-        print('\nWhat would you like to do next?')
-        print('[1] Generate new en group')
-        print('[2] Check available spells')
-        print('[3] Generate new adventure (early access)')
-        print('[4] Import new data to database (*.txt, *.xlsx)')
-        print('[0] Exit')
-
-        userInput = input()
-
-        # Process user input
-        # Exit command
-        if userInput == '0':
-            break
-        # User wants to generate random en group
-        elif userInput == '1':
-            generateEnemies()
-        # User wants to check out spells
-        elif userInput == '2':
-            checkSpells()
-        # User wants to generate random adventure
-        elif userInput == '3':
-            generateAdventure()
-        # User wants to import new data to the database
-        elif userInput == '4':
-            importData(dataSource,
-                       targetFile,
-                       "enemies")
-            importData(dataSource,
-                       targetFile,
-                       "spells")
-        # User entered bullshit
-        else:
-            print('Sorry, that is not a valid input. Try again brah...')
-# ----------------------------------------------------------------------
-
-
 # Gets data from an Excel file and pushes it to the database
 def importData(sourceFile, dbFile, sheetToImport):
     conn = sqlite3.connect(dbFile)
@@ -406,42 +361,127 @@ class spell:
         self.description = description
         self.higherLevels = higherLevels
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # GUI stuff
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 
-class enFrame(tk.Toplevel):
-    def __init__(self, original):
-        self.originalFrame = original
-        tk.Toplevel.__init__(self)
-        self.title("en frame")
+class mainWindow(tk.Tk):
+    def __init__(self, *args, **kwargs):
+        tk.Tk.__init__(self, *args, **kwargs)
+        container = tk.Frame(self)
+        container.pack(side='top', fill='both', expand=True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
 
+        self.frames = {}
+
+        for F in (startPage, enFrame, spellFrame, advFrame):
+            frame = F(container, self)
+            self.frames[F] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
+
+        self.showFrame(startPage)
+    # ------------------------------------------------------------------
+
+    def showFrame(self, cont):
+        frame = self.frames[cont]
+        frame.tkraise()
+# ----------------------------------------------------------------------
+
+
+class startPage(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+
+        self.titleFont = tkfont.Font(family='Helvetica',
+                                     size=14,
+                                     weight="bold",
+                                     slant="italic")
+        self.widgets(controller)
+
+    def widgets(self, controller):
+        # Create start frame (buttons)
+        lbl = ttk.Label(self,
+                        text="Welcome to the noice Caves & Lizards tool",
+                        font=self.titleFont)
+        lbl.grid(column=1,
+                 columnspan=2,
+                 row=1,
+                 sticky='we')
+
+        btn1 = ttk.Button(self,
+                          text="Generate enemies",
+                          command=lambda: controller.showFrame(enFrame))
+        btn1.grid(column=1,
+                  row=2,
+                  sticky='we')
+
+        btn2 = ttk.Button(self,
+                          text="Check spells",
+                          command=spellFrame)
+        btn2.grid(column=2,
+                  row=2,
+                  sticky='we')
+
+        btn3 = ttk.Button(self,
+                          text="Generate adventure",
+                          command=advFrame)
+        btn3.grid(column=1,
+                  row=3,
+                  sticky='we')
+
+        btn4 = ttk.Button(self,
+                          text="Import to database",
+                          command=importData)
+        btn4.grid(column=2,
+                  row=3,
+                  sticky='we')
+
+    # ------------------------------------------------------------------
+
+    def showEnemyShit(self):
+        self.window = enFrame(self)
+        self.window.grid(row=0, column=10, rowspan=2)
+# ----------------------------------------------------------------------
+
+
+class enFrame(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        self.parent = parent
+        self.widgets(controller)
+    # ------------------------------------------------------------------
+
+    def widgets(self, controller):
         # Create for later (supports auto-update)
         self.playerLevels = tk.StringVar()
-        self.playerLevels.set("")
         self.curDiffInt = tk.IntVar()
-        self.curDiffInt.set(2)
         self.curDiffStr = tk.StringVar()
         self.returnFile = tk.IntVar()
+        self.playerLevels.set("")
+        self.curDiffInt.set(2)
 
-        # Create entry boxes
-        self.plrLvl = ttk.Entry(self,
-                                width=7,
-                                textvariable=self.playerLevels)
-        self.plrLvl.grid(column=2,
-                         row=1,
-                         sticky='we')
+        # Create widgets
+        lbl1 = ttk.Label(self,
+                         text="Player levels:")
+        lbl1.grid(column=1,
+                  row=1,
+                  sticky='e')
 
-        # Create labels
-        lbl1 = ttk.Label(self, text="Player levels:")
-        lbl1.grid(column=1, row=1, sticky='e')
-        lbl2 = ttk.Label(self, text="Difficulty:")
-        lbl2.grid(column=1, row=2, sticky='e')
-        lbl3 = ttk.Label(self, textvariable=self.curDiffStr)
-        lbl3.grid(column=2, row=3, sticky='we')
+        plrLvl = ttk.Entry(self,
+                           width=7,
+                           textvariable=self.playerLevels)
+        plrLvl.grid(column=2,
+                    row=1,
+                    sticky='we')
 
-        # Create slider
+        lbl2 = ttk.Label(self,
+                         text="Difficulty:")
+        lbl2.grid(column=1,
+                  row=2,
+                  sticky='e')
+
         self.diffScale = ttk.Scale(self,
                                    from_=1,
                                    to=4,
@@ -453,27 +493,33 @@ class enFrame(tk.Toplevel):
                             sticky='we')
         self.diffScale.set(2)
 
-        # Create checkboxes
+        lbl3 = ttk.Label(self,
+                         textvariable=self.curDiffStr)
+        lbl3.grid(column=2,
+                  row=3,
+                  sticky='we')
+
         checkbtn = ttk.Checkbutton(self,
                                    text="Return file",
                                    variable=self.returnFile)
-        checkbtn.grid(column=2,
-                      row=4,
+        checkbtn.grid(column=3,
+                      row=1,
                       sticky='w')
         checkbtn.state = False
 
         # Create buttons
         genBtn = ttk.Button(self,
                             text="Generate",
-                            command=self.showOutput)
+                            command=lambda: controller.showFrame(enFrameOut))
         genBtn.grid(column=3,
-                    row=3,
+                    row=2,
                     sticky='w')
+
         backBtn = ttk.Button(self,
                              text="Back",
-                             command=self.onClose)
+                             command=lambda: controller.showFrame(startPage))
         backBtn.grid(column=3,
-                     row=4,
+                     row=3,
                      sticky='e')
 
         # Add nice padding to everything
@@ -482,19 +528,8 @@ class enFrame(tk.Toplevel):
                                  pady=5)
 
         # Set focus to first entry field
-        self.plrLvl.focus()
-    # ----------------------------------------------------------------------
-
-    def onClose(self):
-        self.destroy()
-        self.originalFrame.show()
-
-    def showOutput(self):
-        if not self.plrLvl.get() == "":
-            enList = generateEnemies(self.diffScale.get(), self.plrLvl.get())
-
-            enFrame_OUT(self)
-    # ----------------------------------------------------------------------
+        plrLvl.focus()
+# ----------------------------------------------------------------------
 
     def doScaleStuff(self, *args):
         value = self.diffScale.get()
@@ -510,142 +545,70 @@ class enFrame(tk.Toplevel):
             self.curDiffStr.set("Deadly")
         else:
             self.curDiffStr.set("Medium")
-# ----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
 
-class enFrame_OUT(tk.Toplevel):
-    def __init__(self):
-        tk.Toplevel.__init__(self)
-        self.title("Enemy output")
+class enFrameOut(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
 
-        backBtn = ttk.Button(self,
+        enOutRoot = tk.Toplevel()
+        enOutRoot.title("Enemy output")
+
+        enList = generateEnemies(enFrame.diffScale.get(), enFrame.plrLvl.get())
+
+        backBtn = ttk.Button(enOutRoot,
                              text="Back",
-                             command=self.onClose)
+                             command=enList.destroy())
         backBtn.grid(column=1,
                      row=1,
                      sticky='e')
+        curColumn = 1
+        curRow = 2
+        for item in enList[0]:
+            ttk.Label(enOutRoot, text=item[0]).grid(column=curColumn, row=curRow)
+            curColumn += 1
+            curRow += 1
 
-        row = 1
-        column = 1
-    # ----------------------------------------------------------------------
-
-    def onClose(self):
-        self.destroy()
-        enFrame()
+            if curColumn > 3:
+                curColumn = 1
 # ----------------------------------------------------------------------
 
 
-class spellFrame_IN(tk.Toplevel):
-    def __init__(self):
-        tk.Toplevel.__init__(self)
-        self.title("otherFrame")
+class spellFrame(tk.Frame):
+    """
+
+    """
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent, bg="red")
+        self.parent = parent
+        self.widgets(controller)
+    # ------------------------------------------------------------------
+
+    def widgets(self, controller):
+        """
+
+        """
 # ----------------------------------------------------------------------
 
 
-class adventureFrame_IN(tk.Toplevel):
-    # ----------------------------------------------------------------------
-    def __init__(self):
-        tk.Toplevel.__init__(self)
-        self.title("otherFrame")
-# ----------------------------------------------------------------------
+class advFrame(tk.Frame):
+    """
 
+    """
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent, bg="red")
+        self.parent = parent
+    # ------------------------------------------------------------------
 
-class MyApp(object):
-    def __init__(self, parent):
-        self.root = parent
-        self.root.title("Main frame")
-        self.frame = tk.Frame(parent)
-        self.frame.pack()
+    def widgets(self, controller):
+        """
 
-        # Create start frame
-        # Create buttons
-        lbl = ttk.Label(self.frame,
-                        text="Welcome to the noice Caves & Lizards tool",
-                        font=titleFont)
-        lbl.pack()
-        btn1 = ttk.Button(self.frame,
-                          text="Generate enemies",
-                          command=self.openenInFrame)
-        btn1.pack()
-        btn2 = ttk.Button(self.frame,
-                          text="Check spells",
-                          command=self.openSpellInFrame)
-        btn2.pack()
-        btn3 = ttk.Button(self.frame,
-                          text="Generate adventure",
-                          command=self.openAdventureInFrame)
-        btn3.pack()
-        btn4 = ttk.Button(self.frame,
-                          text="Import to database",
-                          command=self.importData)
-        btn4.pack()
-        btn5 = ttk.Button(self.frame,
-                          text="Quit",
-                          command=self.closeAll)
-        btn5.pack(side="bottom")
-    # ----------------------------------------------------------------------
-
-    def hide(self):
-        """"""
-        self.root.withdraw()
-    # ----------------------------------------------------------------------
-
-    def openenInFrame(self):
-        """"""
-        self.hide()
-        enFrame(self)
-    # ----------------------------------------------------------------------
-
-    def openenOutFrame(self):
-        """"""
-        self.hide()
-        enFrame_OUT(self)
-    # ----------------------------------------------------------------------
-
-    def openSpellInFrame(self):
-        """"""
-        self.hide()
-        spellFrame_IN(self)
-    # ----------------------------------------------------------------------
-
-    def openAdventureInFrame(self):
-        """"""
-        self.hide()
-        adventureFrame_IN(self)
-    # ----------------------------------------------------------------------
-
-    def importData(self):
-        """"""
-        importData(dataSource,
-                   targetFile,
-                   "enemies")
-        importData(dataSource,
-                   targetFile,
-                   "spells")
-    # ----------------------------------------------------------------------
-
-    def onCloseOtherFrame(self, otherFrame):
-        """"""
-        otherFrame.destroy()
-        self.show()
-    # ----------------------------------------------------------------------
-
-    def show(self):
-        """"""
-        self.root.update()
-        self.root.deiconify()
-
-    def closeAll(self):
-        root.destroy()
-        root.quit()
+        """
 # ----------------------------------------------------------------------
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    titleFont = tkfont.Font(family='Helvetica',
-                            size=14,
-                            weight="bold",
-                            slant="italic")
-    app = MyApp(root)
-    root.mainloop()
+    app = mainWindow(None)
+    app.title("Main frame")
+    app.mainloop()
